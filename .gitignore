@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+.venv311/
+venv/
+~$*
+.~lock*
+
+# Local data and environments
+data/
+
+# Course documents and submission files
+Brain_Tumor_MRI_Presentation.pptx
+Brain_Tumor_MRI_Report.docx
+PRESENTATION_BUILD_REPORT.txt
+Project 1 Requirements.docx
+Project1_Proposal_BrainTumorMRI(2).docx
+README_PRESENTATION.md
+presentation_outline.pdf
+notebooks/
+
+# Ignore all generated results except the public final package artifacts
+results/*
+!results/final_submission/
+!results/final_submission/canonical_split_report.json
+!results/final_submission/run_manifest.json
+!results/final_submission/comparison/
+!results/final_submission/comparison/**
+!results/final_submission/models/
+!results/final_submission/models/**
+!results/final_submission/presentation_assets/
+!results/final_submission/presentation_assets/**
+results/final_submission/*.md
+

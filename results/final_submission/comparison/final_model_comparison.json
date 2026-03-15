@@ -1,0 +1,36 @@
+{
+  "models": [
+    {
+      "model": "baseline::svm_rbf",
+      "accuracy": 0.906875,
+      "macro_precision": 0.9097388534356592,
+      "macro_recall": 0.9068750000000001,
+      "macro_f1": 0.9046885661224608,
+      "source_run": "real_run"
+    },
+    {
+      "model": "custom_cnn",
+      "accuracy": 0.7375,
+      "macro_precision": 0.7533982504273066,
+      "macro_recall": 0.7375,
+      "macro_f1": 0.7332557657338097,
+      "source_run": "real_run"
+    },
+    {
+      "model": "transfer::resnet50_original",
+      "accuracy": 0.74875,
+      "macro_precision": 0.7716224891494099,
+      "macro_recall": 0.74875,
+      "macro_f1": 0.7405016494427006,
+      "source_run": "real_run"
+    },
+    {
+      "model": "transfer::resnet50_tuned",
+      "accuracy": 0.84375,
+      "macro_precision": 0.8519356687143831,
+      "macro_recall": 0.84375,
+      "macro_f1": 0.8402950844356462,
+      "source_run": "real_run_tuned_fast"
+    }
+  ]
+}

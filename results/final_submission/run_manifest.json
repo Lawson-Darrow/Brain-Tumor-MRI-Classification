@@ -1,0 +1,15 @@
+{
+  "official_dataset_root": "data",
+  "official_results_package": "results/final_submission",
+  "selected_model_runs": {
+    "baseline": "results/real_run/baselines",
+    "custom_cnn": "results/real_run/cnn",
+    "transfer_original": "results/real_run/transfer",
+    "transfer_tuned": "results/real_run_tuned_fast/transfer"
+  },
+  "canonical_commands": {
+    "all_models_reference_run": "python -m src.main --dataset-root data --task all --epochs 3 --batch-size 32 --transfer-model resnet50 --output-dir results/real_run",
+    "tuned_transfer_reference_run": "python -m src.main --dataset-root data --task transfer --epochs 3 --batch-size 32 --transfer-model resnet50 --output-dir results/real_run_tuned_fast"
+  },
+  "seed": 42
+}

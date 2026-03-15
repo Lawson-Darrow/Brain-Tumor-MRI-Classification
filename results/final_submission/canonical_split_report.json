@@ -1,0 +1,48 @@
+{
+  "dataset_root": "data",
+  "proposal_note": "Proposal cites 7023 images. Local dataset contains 7200 images (balanced 1800/class).",
+  "dataset_counts_from_disk": {
+    "Training": {
+      "glioma": 1400,
+      "meningioma": 1400,
+      "notumor": 1400,
+      "pituitary": 1400
+    },
+    "Testing": {
+      "glioma": 400,
+      "meningioma": 400,
+      "notumor": 400,
+      "pituitary": 400
+    },
+    "total_images": 7200
+  },
+  "split_report_from_official_run": {
+    "class_names": [
+      "glioma",
+      "meningioma",
+      "notumor",
+      "pituitary"
+    ],
+    "train_size": 4760,
+    "validation_size": 840,
+    "test_size": 1600,
+    "train_class_distribution": {
+      "glioma": 1190,
+      "meningioma": 1190,
+      "notumor": 1190,
+      "pituitary": 1190
+    },
+    "validation_class_distribution": {
+      "glioma": 210,
+      "meningioma": 210,
+      "notumor": 210,
+      "pituitary": 210
+    },
+    "test_class_distribution": {
+      "glioma": 400,
+      "meningioma": 400,
+      "notumor": 400,
+      "pituitary": 400
+    }
+  }
+}
