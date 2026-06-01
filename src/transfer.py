@@ -24,10 +24,16 @@ def build_transfer_model(
         model = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
         in_features = model.classifier[6].in_features
         model.classifier[6] = nn.Linear(in_features, num_classes)
+    elif model_name == "vit_b_16":
+        # ViT-B/16 expects 224x224 ImageNet-normalized input, which matches
+        # build_transforms(image_size=224) in data.py.
+        model = models.vit_b_16(weights=models.ViT_B_16_Weights.DEFAULT)
+        in_features = model.heads.head.in_features
+        model.heads.head = nn.Linear(in_features, num_classes)
     else:
         raise ValueError(
             f"Unsupported transfer model '{model_name}'. "
-            "Choose from: resnet50, efficientnet_b0, vgg16."
+            "Choose from: resnet50, efficientnet_b0, vgg16, vit_b_16."
         )
 
     if freeze_backbone:
@@ -43,6 +49,9 @@ def build_transfer_model(
                 param.requires_grad = True
         elif model_name == "vgg16":
             for param in model.classifier.parameters():
+                param.requires_grad = True
+        elif model_name == "vit_b_16":
+            for param in model.heads.parameters():
                 param.requires_grad = True
 
     return model
@@ -64,6 +73,9 @@ def unfreeze_last_n_feature_blocks(
         blocks = list(model.features)[::-1]
     elif model_name == "vgg16":
         blocks = [model.features]
+    elif model_name == "vit_b_16":
+        # Transformer encoder blocks, deepest first.
+        blocks = list(model.encoder.layers)[::-1]
     else:
         return
 

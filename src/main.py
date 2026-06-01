@@ -165,7 +165,7 @@ def parse_args() -> argparse.Namespace:
         "--transfer-model",
         type=str,
         default="resnet50",
-        choices=["resnet50", "efficientnet_b0", "vgg16"],
+        choices=["resnet50", "efficientnet_b0", "vgg16", "vit_b_16"],
     )
     return parser.parse_args()
 
