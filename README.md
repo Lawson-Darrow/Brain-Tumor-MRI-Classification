@@ -1,197 +1,134 @@
-# Brain Tumor MRI Classification
+# Brain Tumor MRI Classification — Classical vs CNN vs Vision Transformer
 
-Four-class brain tumor MRI classification project using:
+Four-class brain-tumor MRI classification (`glioma`, `meningioma`, `pituitary`,
+`notumor`) comparing classical models on handcrafted features, a from-scratch CNN,
+and transfer learning with **ResNet50, EfficientNet-B0, and a Vision Transformer
+(ViT-B/16)** — trained to convergence, reported across 3 seeds with ROC-AUC,
+calibration error, and bootstrap confidence intervals.
 
-- Classical machine learning on handcrafted image features
-- A custom convolutional neural network (CNN)
-- Transfer learning with pretrained vision backbones
+The headline contribution is methodological: this dataset's official train/test
+split **leaks**, and we measure and correct for it.
 
-The goal is to compare modeling strategies under the same evaluation policy and report results using consistent metrics (accuracy, precision, recall, and macro-F1).
+## Headline findings
 
-## Project Summary
+1. **The official split leaks badly.** A perceptual-hash audit
+   (`scripts/audit_leakage.py`) finds **23% of test images are exact duplicates of
+   training images, and 63% have a near-duplicate in training.** Every published
+   accuracy on this split — including this project's original course submission — is
+   therefore optimistic.
+2. **The leakage inflates scores by ~7–10 accuracy points.** Evaluating on a
+   **deduplicated** test set (images with no near-twin in training) drops every model
+   substantially: e.g. ViT-B/16 falls from **0.949 → 0.878** accuracy
+   (macro-F1 0.948 → 0.832).
+3. **At convergence, the Vision Transformer wins** (0.949 official / 0.878 clean),
+   narrowly ahead of ResNet50, and both beat the classical SVM (0.906). This corrects
+   an earlier under-trained result in which the SVM appeared to beat the CNNs.
 
-This repository implements an end-to-end classification pipeline for the Kaggle dataset `masoudnickparvar/brain-tumor-mri-dataset`. The code covers:
+## Results
 
-1. Data loading and split preparation
-2. Feature extraction for baseline models
-3. Training and evaluation for baseline, CNN, and transfer approaches
-4. Artifact packaging for final reporting and presentation
+Single training/validation split (group-aware so near-duplicates never straddle
+train/val), evaluated on **both** the official test set (comparable to published
+numbers) and the **deduplicated** test set (honest generalization). Deep models are
+mean ± std over 3 seeds.
 
-Classes:
+| Model | Official acc | Official macro-F1 | ROC-AUC (OvR) | ECE | **Clean acc** | **Clean macro-F1** |
+|---|---:|---:|---:|---:|---:|---:|
+| **ViT-B/16** | **0.949 ± 0.009** | **0.948** | **0.990** | 0.032 | **0.878** | **0.832** |
+| ResNet50 | 0.940 ± 0.004 | 0.938 | 0.988 | 0.041 | 0.864 | 0.797 |
+| EfficientNet-B0 | 0.838 ± 0.023 | 0.833 | 0.958 | 0.023 | 0.763 | 0.696 |
+| Custom CNN | 0.833 ± 0.012 | 0.826 | 0.954 | 0.047 | 0.732 | 0.662 |
+| SVM-RBF (HOG, classical) | 0.906 | 0.904 | — | — | — | — |
 
-- `glioma`
-- `meningioma`
-- `pituitary`
-- `notumor`
+- **Leakage gap** (official − clean accuracy): ViT 0.071, ResNet50 0.076, EfficientNet
+  0.075, CNN 0.101. The clean numbers are the ones to trust as generalization estimates.
+- Strong pretrained backbones (ViT, ResNet50) clearly beat the classical SVM; the
+  weaker deep models (EfficientNet-B0, the from-scratch CNN) do **not** — a fair nuance,
+  not "deep always wins."
+- Per-class F1 and confusion matrices are saved per run under `results/research_grade/`;
+  `glioma`/`meningioma` are the harder, more-confused pair.
 
-## Dataset and Evaluation Policy
+## The data-leakage audit (why two test columns)
 
-Expected local dataset layout:
+The masoudnickparvar dataset is assembled from several public sources and contains many
+near-duplicate MRI slices. `scripts/audit_leakage.py` computes a 64-bit perceptual hash
+(dHash) for every image and reports duplicates that cross the train/test boundary:
 
-```text
-data/
-  Training/
-    glioma/
-    meningioma/
-    pituitary/
-    notumor/
-  Testing/
-    glioma/
-    meningioma/
-    pituitary/
-    notumor/
-```
+| | Count | % of test |
+|---|---:|---:|
+| Test images with an **exact** duplicate in Training | 372 | 23.3% |
+| Test images with a **near**-duplicate (Hamming ≤ 5) | 1004 | 62.8% |
 
-Evaluation policy used throughout the project:
+`src/dedup_split.py` acts on this: it groups near-duplicate images (union-find over the
+hash graph), builds a **group-aware** train/val split so duplicates can't leak into model
+selection, and derives a **deduplicated test set** (569 of 1600 official test images whose
+hash-group has no member in Training). We report both.
 
-- `Training/` is split into train and validation sets using stratified sampling.
-- `Testing/` is treated as a strict held-out set for final evaluation only.
-- Model and hyperparameter decisions are made using validation performance.
+**Honest caveats:** the dataset ships no patient IDs, so true patient-level leakage cannot
+be fully removed — dHash near-duplication is a proxy. One cross-class exact duplicate was
+also found (a `glioma` test image identical to a `meningioma` training image), indicating
+some label noise. Treat official-split numbers as benchmark-comparable, not as clinical
+generalization, and note this is a research/education project, **not a diagnostic device.**
 
-Dataset counts used in the final package:
+## Interpretability
 
-- `Training`: 5600 images (1400 per class)
-- `Testing`: 1600 images (400 per class)
-- `Total`: 7200 images
-
-The proposal text cited 7023 images; this mismatch is documented in `results/final_submission/canonical_split_report.json`.
+Grad-CAM overlays for each model (CNN/ResNet/EfficientNet via the final conv stage,
+ViT via a reshape transform on the last encoder block) are saved at
+`results/research_grade/<model>/seed0/gradcam/`. Saliency is qualitative context for where
+each model attends — it is **not** evidence of clinical reasoning.
 
 ## Methods
 
-### 1) Baseline ML (Handcrafted Features)
+- **Classical:** grayscale + HOG features, optional PCA, then LogReg / RBF-SVM / RandomForest.
+- **Custom CNN:** from-scratch conv net (`src/cnn.py`), trained with augmentation + early stopping.
+- **Transfer (ResNet50 / EfficientNet-B0 / ViT-B/16):** two-stage — freeze backbone and train the
+  head, then unfreeze the last block and fine-tune. 224×224, ImageNet normalization.
+- **Evaluation:** validation (group-aware) for model selection; metrics on official + clean test;
+  ROC-AUC (one-vs-rest macro), expected calibration error, bootstrap 95% CIs; 3 seeds (split fixed,
+  training seed varied).
 
-- Grayscale conversion and resize to `128x128`
-- HOG (Histogram of Oriented Gradients) feature extraction
-- Optional PCA dimensionality reduction (default 200 components)
-- Models:
-  - Logistic Regression
-  - RBF SVM
-  - Random Forest
+## Reproduce
 
-### 2) Custom CNN
+```bash
+# Dataset: masoudnickparvar/brain-tumor-mri-dataset (Training/ + Testing/ with 4 class folders)
+python scripts/audit_leakage.py            # perceptual-hash leakage audit -> results/leakage_audit.json
+python scripts/run_brain_experiments.py    # full matrix: 4 deep models x 3 seeds + baselines, dual eval
+python scripts/gradcam_figures.py --model vit_b_16 \
+    --weights results/research_grade/vit_b_16/seed0/model_seed0.pt
+```
 
-- From-scratch CNN implemented in `src/cnn.py`
-- Data augmentation in training pipeline:
-  - Random horizontal flip
-  - Random rotation
-  - Mild color jitter
-- Optimization with early stopping and learning-rate scheduling
+Environment: Python 3.12, PyTorch 2.6 (CUDA), `timm`, `pytorch-grad-cam`, scikit-learn. Trained on
+a single RTX 4090. The original single-seed CLI pipeline (`python -m src.main ...`) still works.
 
-### 3) Transfer Learning
+## Original course submission (preserved)
 
-- Backbones supported:
-  - `resnet50`
-  - `efficientnet_b0`
-  - `vgg16`
-- Two-stage training strategy:
-  1. Freeze backbone, train classifier head
-  2. Unfreeze last feature block(s), then fine-tune
+This started as an MTH/CSE course project. Its original results
+(`results/final_submission/`) were produced with deep models trained for only ~3 epochs, which
+is why the classical SVM (0.906) appeared to beat an under-trained ResNet50 (0.844). Training to
+convergence (above) reverses that and adds the ViT. The `Brain_Tumor_MRI_Classification.ipynb`
+notebook mirrors the original single-pass pipeline.
 
-## Final Results (Held-Out Test Set)
-
-From `results/final_submission/comparison/final_model_comparison.csv`:
-
-| Model | Accuracy | Macro-F1 |
-|---|---:|---:|
-| `baseline::svm_rbf` | `0.9069` | `0.9047` |
-| `transfer::resnet50_tuned` | `0.8438` | `0.8403` |
-| `transfer::resnet50_original` | `0.7488` | `0.7405` |
-| `custom_cnn` | `0.7375` | `0.7333` |
-
-Key observations:
-
-- Best overall model in this run is `baseline::svm_rbf`.
-- Tuned transfer learning substantially improves over the original transfer run.
-- `notumor` is generally the easiest class, while `glioma` remains comparatively harder.
-
-## Repository Structure
+## Repository structure
 
 ```text
 src/
-  data.py                # dataset scanning, stratified split, dataloaders
-  features.py            # HOG and PCA feature pipeline
-  baselines.py           # logistic regression / SVM / random forest branch
-  cnn.py                 # custom CNN architecture
-  transfer.py            # transfer model builders and unfreeze logic
-  train.py               # training loops, early stopping, prediction
-  evaluate.py            # metrics + confusion matrix plotting
-  main.py                # command-line entry point
-  finalize_artifacts.py  # final package assembly + report assets
-
-results/final_submission/
-  canonical_split_report.json
-  comparison/
-  models/
-  presentation_assets/
-  run_manifest.json
+  data.py            # dataset scan, stratified split, dataloaders
+  dedup_split.py     # leakage-aware group split + deduplicated test set  [new]
+  features.py        # HOG + PCA pipeline
+  baselines.py       # classical models
+  cnn.py             # custom CNN
+  transfer.py        # backbone builders incl. vit_b_16                    [updated]
+  train.py           # training loop, predict, predict_proba              [updated]
+  evaluate.py        # metrics + confusion matrices
+  main.py            # original single-run CLI
+scripts/
+  audit_leakage.py           # perceptual-hash leakage audit              [new]
+  run_brain_experiments.py   # research-grade matrix + dual eval          [new]
+  gradcam_figures.py         # Grad-CAM interpretability                  [new]
+results/
+  leakage_audit.json
+  research_grade/            # per-model metrics, weights, gradcam (gitignored bulk)
 ```
-
-## Setup
-
-Recommended Python version: `3.10` to `3.12`.
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Dependencies are listed in `requirements.txt`.
-
-## How to Run
-
-### Baselines Only
-
-```bash
-python -m src.main --dataset-root data --task baselines --output-dir results/real_run
-```
-
-### Custom CNN Only
-
-```bash
-python -m src.main --dataset-root data --task cnn --epochs 3 --batch-size 32 --output-dir results/real_run
-```
-
-### Transfer Learning Only
-
-```bash
-python -m src.main --dataset-root data --task transfer --epochs 3 --batch-size 32 --transfer-model resnet50 --output-dir results/real_run
-```
-
-### Run All Tracks
-
-```bash
-python -m src.main --dataset-root data --task all --epochs 3 --batch-size 32 --transfer-model resnet50 --output-dir results/real_run
-```
-
-## Build Final Submission Artifacts
-
-```bash
-python -m src.finalize_artifacts --dataset-root data --results-root results --output-root results/final_submission
-```
-
-This assembles consolidated outputs including:
-
-- split report
-- comparison tables
-- model metrics and confusion matrices
-- presentation-ready figures
-- run manifest
-
-## Colab Notebook Version
-
-A notebook version of the project is included at:
-
-- `Brain_Tumor_MRI_Classification.ipynb`
-
-It mirrors the core pipeline in a single Colab workflow for easier course submission.
-
-## Reproducibility Notes
-
-- Global seeds are set for Python, NumPy, and PyTorch.
-- Validation splitting is stratified and seeded.
-- Run provenance is documented in `results/final_submission/run_manifest.json`.
 
 ## Acknowledgment
 
-Dataset source: Kaggle, `masoudnickparvar/brain-tumor-mri-dataset`.
+Dataset: Kaggle, `masoudnickparvar/brain-tumor-mri-dataset`.

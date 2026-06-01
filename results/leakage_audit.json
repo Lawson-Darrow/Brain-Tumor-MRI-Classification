@@ -1,0 +1,87 @@
+{
+  "threshold": 5,
+  "n_train": 5600,
+  "n_test": 1600,
+  "test_exact_dup_in_train": 372,
+  "test_near_dup_in_train": 1004,
+  "test_near_dup_pct": 62.75,
+  "train_images_with_near_dup_in_train": 3657,
+  "train_near_dup_pct": 65.3,
+  "worst_cross_split_examples": [
+    {
+      "test": "Testing\\notumor\\Te-no_275.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1027.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_114.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1103.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\meningioma\\Te-me_202.jpg",
+      "nearest_train": "Training\\meningioma\\Tr-me_421.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\meningioma\\Te-me_42.jpg",
+      "nearest_train": "Training\\meningioma\\Tr-me_1110.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_276.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1029.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_277.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1133.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\glioma\\Te-gl_68.jpg",
+      "nearest_train": "Training\\meningioma\\Tr-me_458.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_28.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1284.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\pituitary\\Te-pi_296.jpg",
+      "nearest_train": "Training\\pituitary\\Tr-pi_778.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_281.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1346.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_282.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1294.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_113.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1027.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_112.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_1229.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\notumor\\Te-no_273.jpg",
+      "nearest_train": "Training\\notumor\\Tr-no_618.jpg",
+      "hamming": 0
+    },
+    {
+      "test": "Testing\\meningioma\\Te-me_205.jpg",
+      "nearest_train": "Training\\meningioma\\Tr-me_661.jpg",
+      "hamming": 0
+    }
+  ]
+}
