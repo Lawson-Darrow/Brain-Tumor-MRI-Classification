@@ -1,0 +1,9 @@
+{
+  "hamming_threshold": 5,
+  "n_train": 5061,
+  "n_val": 539,
+  "n_test_official": 1600,
+  "n_test_clean": 569,
+  "test_dropped_as_leaked": 1031,
+  "test_leaked_pct": 64.44
+}

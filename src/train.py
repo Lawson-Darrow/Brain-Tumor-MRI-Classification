@@ -152,3 +152,26 @@ def predict(model: nn.Module, loader: DataLoader) -> tuple[list[int], list[int]]
         y_true.extend(targets.tolist())
     return y_true, y_pred
 
+
+@torch.no_grad()
+def predict_proba(model: nn.Module, loader: DataLoader):
+    """Run inference and return (y_true, softmax_probs) for ROC-AUC and calibration.
+
+    The base predict() returns labels only, which is insufficient for AUC/ECE; this
+    returns per-class probabilities so threshold-free and calibration metrics work.
+    """
+    import numpy as np
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    model.eval()
+
+    y_true: list[int] = []
+    probs: list[list[float]] = []
+    for images, targets in loader:
+        logits = model(images.to(device))
+        p = torch.softmax(logits, dim=1).cpu().numpy()
+        probs.extend(p.tolist())
+        y_true.extend(targets.tolist())
+    return np.array(y_true), np.array(probs)
+
