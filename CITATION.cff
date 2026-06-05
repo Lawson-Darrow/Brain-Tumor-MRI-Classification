@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Brain Tumor MRI Classification: Classical vs CNN vs Vision Transformer, with a data-leakage audit"
+authors:
+  - family-names: "Darrow"
+    given-names: "Lawson"
+repository-code: "https://github.com/Lawson-Darrow/Brain-Tumor-MRI-Classification"
+license: MIT
+version: "0.1.0"
+date-released: "2026-06-05"
+keywords:
+  - medical-imaging
+  - mri
+  - image-classification
+  - vision-transformer
+  - data-leakage
+references:
+  - type: data
+    title: "Brain Tumor MRI Dataset"
+    authors:
+      - name: "Masoud Nickparvar"
+    url: "https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset"
+    year: 2021
